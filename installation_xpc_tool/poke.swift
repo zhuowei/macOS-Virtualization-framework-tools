@@ -60,5 +60,6 @@ if let errorData = xpc_dictionary_get_value(resultDict, "error") {
 } else if let valueData = xpc_dictionary_get_value(resultDict, "value") {
     print(valueData)
     let myData = Data(bytes: xpc_data_get_bytes_ptr(valueData)!, count: xpc_data_get_length(valueData))
+    try! myData.write(to: URL(fileURLWithPath: "KnownGoodReturn.plist"))
     print(try! PropertyListSerialization.propertyList(from: myData, format: nil))
 }

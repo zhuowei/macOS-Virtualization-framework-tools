@@ -29,6 +29,17 @@ void wdb_xpc_connection_send_message_with_reply(xpc_connection_t connection, xpc
   fprintf(
       stderr, "%s\n",
       [NSString stringWithFormat:@"%@ %@ %@ %@", connection, message, targetq, handler].UTF8String);
+  if (!strcmp(xpc_dictionary_get_string(message, "name"), "load_restore_image")) {
+    dispatch_async(targetq, ^{
+      xpc_object_t result_dict = xpc_dictionary_create_empty();
+      xpc_dictionary_set_bool(result_dict, "has_value", true);
+      NSData* plist_data = [NSData dataWithContentsOfFile:@"KnownGoodReturn.plist"];
+      xpc_dictionary_set_data(result_dict, "value", plist_data.bytes, plist_data.length);
+      xpc_object_t response = xpc_dictionary_create_empty();
+      xpc_dictionary_set_value(response, "result", result_dict);
+      handler(response);
+    });
+  }
 }
 DYLD_INTERPOSE(wdb_xpc_connection_send_message_with_reply, xpc_connection_send_message_with_reply);
 
@@ -49,7 +60,7 @@ DYLD_INTERPOSE(wdb_xpc_connection_send_message_with_reply_sync,
 extern char* sandbox_extension_issue_file_to_process();
 char* wdb_sandbox_extension_issue_file_to_process() {
   fprintf(stderr, "sandbox_extension_issue_file_to_process\n");
-  return "nice";
+  return strcpy(malloc(0x100), "nice");
 }
 DYLD_INTERPOSE(wdb_sandbox_extension_issue_file_to_process,
                sandbox_extension_issue_file_to_process);
