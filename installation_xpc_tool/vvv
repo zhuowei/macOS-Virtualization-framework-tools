@@ -1,0 +1,6 @@
+#!/bin/bash
+set -e
+./build.sh
+echo "rm poke
+put poke" | sftp miranda.local
+ssh miranda.local ./poke
