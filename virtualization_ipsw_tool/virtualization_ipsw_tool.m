@@ -6,7 +6,33 @@ char* printMe(id o) { return [o debugDescription].UTF8String; }
 - (NSArray<VZMacOSConfigurationRequirements*>*)_configurations;
 @end
 
-int main(int argc, char** argv) {
+@interface VZMacHardwareModel (PrivateStuff)
++ (VZMacHardwareModel*)_hardwareModelWithPlatformVersion:(int)platformVersion boardID:(int)boardId;
+@end
+
+int main() {
+  // BoardID default for version 2 is 0x20 and is not stored in dataRepresentation
+  // if I change it, it _is_ stored
+  VZMacHardwareModel* model = [VZMacHardwareModel _hardwareModelWithPlatformVersion:2 boardID:0x20];
+  fprintf(stderr, "%s %s\n", model.description.UTF8String,
+          model.dataRepresentation.description.UTF8String);
+  [model.dataRepresentation writeToFile:@"HardwareModel.dat" atomically:false];
+  NSURL* outputUrl = [NSURL fileURLWithPath:@"AuxStorage.dat"];
+  NSError* error;
+  fprintf(stderr, "auxStorage\n");
+  VZMacAuxiliaryStorage* auxStorage =
+      [[VZMacAuxiliaryStorage alloc] initCreatingStorageAtURL:outputUrl
+                                                hardwareModel:model
+                                                      options:0
+                                                        error:&error];
+  fprintf(stderr, "out %p %p\n", error, auxStorage);
+  if (!auxStorage) {
+    fprintf(stderr, "%s\n", error.description.UTF8String);
+  }
+  fprintf(stderr, "%s\n", auxStorage.description.UTF8String);
+}
+
+int main2(int argc, char** argv) {
   if (argc < 2) {
     fprintf(stderr, "Usage: virtualization_ipsw_tool <path/to/ipsw> [optional/nvram_output.bin]\n");
     return 1;
